@@ -1,0 +1,27 @@
+scm:
+    # firmware version being used. When this value is changed, a parameter upgrade shall be triggered.
+    fwver: 
+      type: string
+      value: 1.2.6
+    filever:
+      type: uint8
+      value: 1
+
+
+scfg:
+    radio/band:
+        2g: 2,3,2       # auto type is str
+        4g: 1,2,3       # auto type is str
+    gprs:
+        # default type: auto
+        autoattach: 1
+    sat/gtp: "12345678"
+    # key with special property
+    power/srv/rf:
+        flag: 0     # auto type is uint32
+        version: 1      # auto type is uint32
+        type: auto/byte/short/int/uint32
+        value: 0        # auto type is uint32
+
+# so there are some reserved keyname for this format: property/version/type/value
+
