@@ -52,21 +52,41 @@ class record(object):
 
 
 import sys
-import numpy as np
+# import numpy as np
 
 
-sys_is_le = sys.byteorder == 'little'
-print(sys_is_le)
-print(sys.byteorder)
-
-int32 = np.int32(1)
-print(int32)
-
-# a = np.dtype.newbyteorder(np.uint32, '>')
-dt = np.dtype(np.int32)
-a = dt.newbyteorder('>')
+# sys_is_le = sys.byteorder == 'little'
+# print(sys_is_le)
 # print(sys.byteorder)
-print (a)
-print(int32)
+
+# int32 = np.int32(1)
+# print(int32)
+
+# # a = np.dtype.newbyteorder(np.uint32, '>')
+# dt = np.dtype(np.int32)
+# a = dt.newbyteorder('>')
+# # print(sys.byteorder)
+# print (a)
+# print(int32)
 
 
+# from ctypes import *
+# value = c_uint32(12)
+# with open("asdf.def", 'wb') as f:
+#     f.write(value)
+# f.close()
+
+from ctypes import *
+from zlib import crc32
+num1 = c_uint32(0x1234)
+print(num1)
+num = num1.value.to_bytes(sizeof(num1), byteorder="big")
+num2 = int.from_bytes(num, byteorder="big")
+print(num2)
+crc = c_uint32(crc32(num))
+crc_num = crc.value.to_bytes(sizeof(crc), byteorder="big")
+
+with open("asdf.def", 'wb') as f:
+    f.write(num)
+    f.write(crc_num)
+f.close()

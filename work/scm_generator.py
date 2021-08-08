@@ -6,21 +6,10 @@ from zlib import crc32
 import sys
 import os
 import yaml
-import numpy as np
+import ctypes as c
 
 
-class orderbyte(object):
-
-    new_uint32 = np.uint32
-    # new_uint8 = np.uint8
-    def __init__(self, endian='>'):
-        if (endian != '>' and endian != '<'):
-            return
-        new_uint32 = np.dtype(np.uint32)
-        new_uint32 = new_uint32.newbyteorder(endian)
-
-
-class SCMFile(orderbyte):
+class SCMFile(c.BigEndianStructure):
 
     __input_yaml = "./scm.yaml"
     __out_file = "./scm.def"
@@ -29,14 +18,14 @@ class SCMFile(orderbyte):
 
     __header_key = "scm"
     __header_data = {}
-    # __header_magic_word = "55AA55AA"
+
     __header_buffer = []
-    __header_magic_word = np.uint32(0x55AA11EA)
-    __header_crc = np.uint32(0x3344EEFF)
-    __header_shrink_hold = np.uint32(0x00001000)
-    __header_version = np.uint8(0x01)
-    __header_flag = np.uint8(0x00)
-    __header_rfu = np.uint16(0x0101)
+    __header_magic_word = c.c_uint32(0x55AA1199)
+    __header_crc = c.c_uint32(0x3344EEFF)
+    __header_shrink_hold = c.c_uint32(0x00001000)
+    __header_version = c.c_uint8(0x01)
+    __header_flag = c.c_uint8(0x00)
+    __header_rfu = c.c_uint16(0x0101)
     __content=""
 
     def __init__(self, in_file="", out_file=""):
@@ -101,16 +90,22 @@ class SCMFile(orderbyte):
         self.__header_buffer.append(self.__header_version)
         self.__header_buffer.append(self.__header_flag)
         self.__header_buffer.append(self.__header_rfu)
-        self.__header_crc = np.uint32(crc32(np.array(self.__header_buffer[2:], dtype=np.uint8)))
+        self.__header_crc = crc32(bytes(self.__header_buffer[2:]))
         self.__header_buffer[1] =  self.__header_crc
 
         print(str(self.__header_buffer))
         with open("temp.def", 'wb') as f:
             for value in self.__header_buffer:
-                dt = np.dtype(value).orderbyte()
-                dt[0] = '>'
-                val_arr = np.ndarray.astype(dt)
-                f.write(val_arr)
+                # print(type(value).size())
+                # print(value.value)
+                num = int(value.value)
+                print(c.sizeof(value))
+                f.write(num.to_bytes(c.sizeof(value), byteorder="big"))
+                # f.write(value.to_bytes(4, byteorder='little'))
+                # print(type(value))
+                # if (type(value) == "ctype.c_uint"):
+                # str(value).encode('hex')[::-1]
+                # f.write(value)
         f.close()
 
 
