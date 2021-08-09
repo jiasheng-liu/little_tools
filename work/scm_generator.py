@@ -2,14 +2,16 @@
 #-*- utf-8 -*-
 
 
-from zlib import crc32
 import sys
 import os
 import yaml
 import ctypes as c
 
+from scm_common import crc16_ccitt
 
-class SCMFile(c.BigEndianStructure):
+
+
+class SCMFile:
 
     __input_yaml = "./scm.yaml"
     __out_file = "./scm.def"
@@ -21,11 +23,11 @@ class SCMFile(c.BigEndianStructure):
 
     __header_buffer = []
     __header_magic_word = c.c_uint32(0x55AA1199)
-    __header_crc = c.c_uint32(0x3344EEFF)
+    __header_crc = c.c_uint16(0)
     __header_shrink_hold = c.c_uint32(0x00001000)
     __header_version = c.c_uint8(0x01)
     __header_flag = c.c_uint8(0x00)
-    __header_rfu = c.c_uint16(0x0101)
+    __header_rfu = c.c_uint32(0)
     __content=""
 
     def __init__(self, in_file="", out_file=""):
@@ -76,42 +78,31 @@ class SCMFile(c.BigEndianStructure):
         pass
 
 
-    def format_header(self, header=None):
-        # if ( header is None or (not isinstance(dict, header)) or len(header) == 0):
-        #     print("wrong parameter")
-        #     header=self.__header_data
+    def format_header(self):
+        self.__header_buffer.extend(list(int(self.__header_magic_word.value).to_bytes(c.sizeof(self.__header_magic_word), byteorder=now_byteorder)))
+        self.__header_buffer.extend(list(int(self.__header_shrink_hold.value).to_bytes(c.sizeof(self.__header_shrink_hold), byteorder=now_byteorder)))
+        self.__header_buffer.extend(list(int(self.__header_version.value).to_bytes(c.sizeof(self.__header_version), byteorder=now_byteorder)))
+        self.__header_buffer.extend(list(int(self.__header_flag.value).to_bytes(c.sizeof(self.__header_flag), byteorder=now_byteorder)))
+        self.__header_buffer.extend(list(int(self.__header_rfu.value).to_bytes(c.sizeof(self.__header_rfu), byteorder=now_byteorder)))
 
-        # if (header.get(self.__header_key) is not None):
-        #     header = header[self.__header_key]
-
-        self.__header_buffer.append(self.__header_magic_word)
-        self.__header_buffer.append(self.__header_crc)
-        self.__header_buffer.append(self.__header_shrink_hold)
-        self.__header_buffer.append(self.__header_version)
-        self.__header_buffer.append(self.__header_flag)
-        self.__header_buffer.append(self.__header_rfu)
-        self.__header_crc = crc32(bytes(self.__header_buffer[2:]))
-        self.__header_buffer[1] =  self.__header_crc
+        self.__header_crc.value = crc16_ccitt(bytearray(self.__header_buffer))
+        self.__header_buffer.extend(list(int(self.__header_crc.value).to_bytes(c.sizeof(self.__header_crc), byteorder=now_byteorder)))
 
         print(str(self.__header_buffer))
         with open("temp.def", 'wb') as f:
-            for value in self.__header_buffer:
-                # print(type(value).size())
-                # print(value.value)
-                num = int(value.value)
-                print(c.sizeof(value))
-                f.write(num.to_bytes(c.sizeof(value), byteorder="big"))
-                # f.write(value.to_bytes(4, byteorder='little'))
-                # print(type(value))
-                # if (type(value) == "ctype.c_uint"):
-                # str(value).encode('hex')[::-1]
-                # f.write(value)
+            array_asdf = bytearray(self.__header_buffer)
+            f.write(array_asdf)
         f.close()
 
 
 
-    def convert(self):
+class recordItem:
+
+    def __init__(self):
         pass
+
+
+
 
 
 
