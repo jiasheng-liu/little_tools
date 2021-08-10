@@ -32,8 +32,14 @@ def hashcode(data: bytes) -> int:
     h = 0
     for c in data:
         h = int(seed * h) & 0xFFFFFFFF
-        h = h + ord(c)
+        h = h + c
     return h
 
 
+if __name__ == "__main__":
+    data = bytes("hello world!", encoding='utf-8')
+    crc = crc16_ccitt(data=data)
+    print(crc)
+    hc = hashcode(data=data)
+    print(hc)
 

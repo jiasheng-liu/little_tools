@@ -13,8 +13,8 @@ from scm_common import crc16_ccitt, now_byteorder, hashcode
 
 class scm_file_header:
 
-    __input_yaml = "./scm.yaml"
-    __out_file = "./scm.def"
+    __input_yaml = ""
+    __out_file = ""
     __current_dir = os.path.dirname(__file__)
     __file_data = {}
 
@@ -30,7 +30,7 @@ class scm_file_header:
     __header_rfu = c.c_uint32(0)
     __content=""
 
-    def __init__(self, in_file="", out_file=""):
+    def __init__(self, in_file, out_file):
         if (in_file is not ""):
             self.__input_yaml = os.path.join(self.__current_dir, in_file)
         else:
@@ -41,7 +41,7 @@ class scm_file_header:
             self.__out_file = os.path.join(self.__current_dir, self.__out_file)
 
 
-    def load_yaml(self, in_file=""):
+    def load_yaml(self):
         yaml_file = in_file
         if (in_file is ""):
             yaml_file = self.__input_yaml
