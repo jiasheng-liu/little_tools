@@ -8,7 +8,7 @@ def crc16_ccitt(data:bytes, poly=0x8408) -> int :
     crc16_ccitt, polymode is 0x8408
     refer: https://gist.github.com/oysstu/68072c44c02879a2abf94ef350d1c7c6
     """
-    data = bytearray(data)
+    # data = bytearray(data)
     crc = 0xFFFF
     for b in data:
         cur_byte = b & 0xFF

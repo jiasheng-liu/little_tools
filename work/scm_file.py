@@ -22,29 +22,24 @@ class scm_file_header:
     __header_data = {}
 
     __header_buffer = []
-    __header_magic_word = c.c_uint32(0x55AA1199)
+    __header_magic_word = c.c_uint32(0)
     __header_crc = c.c_uint16(0)
-    __header_shrink_hold = c.c_uint32(0x00001000)
-    __header_version = c.c_uint8(0x01)
-    __header_flag = c.c_uint8(0x00)
+    __header_shrink_hold = c.c_uint32(0)
+    __header_version = c.c_uint8(0)
+    __header_flag = c.c_uint8(0)
     __header_rfu = c.c_uint32(0)
     __content=""
 
+
+    key_scm_ver = "filever"
+
     def __init__(self, in_file, out_file):
-        if (in_file is not ""):
-            self.__input_yaml = os.path.join(self.__current_dir, in_file)
-        else:
-            self.__input_yaml = os.path.join(self.__current_dir, self.__input_yaml)
-        if (out_file is not ""):
-            self.__out_file = os.path.join(self.__current_dir, out_file)
-        else:
-            self.__out_file = os.path.join(self.__current_dir, self.__out_file)
+        self.__input_yaml = in_file
+        self.__out_file = out_file
 
 
-    def load_yaml(self):
-        yaml_file = in_file
-        if (in_file is ""):
-            yaml_file = self.__input_yaml
+    def load_yaml(self) -> dict:
+        yaml_file = self.__input_yaml
         try:
             with open(yaml_file, 'r') as stream:
                 try:
@@ -67,6 +62,7 @@ class scm_file_header:
         except:
             print("failed to open yaml file")
             exit(-1)
+        return self.__header_data
 
 
 
@@ -74,8 +70,54 @@ class scm_file_header:
         print(self.__file_data)
 
 
-    def convert_element(self, type="", value=""):
-        pass
+
+    def set_header_key(self, key: str):
+        self.__header_key = key
+
+
+    def set_header_magic_word(self, word:int = 0):
+        if (word == 0):
+            self.__header_magic_word.value = int.from_bytes(bytes(self.__header_key, encoding="utf-8"), byteorder=sys.byteorder)
+        else:
+            self.__header_magic_word.value = word
+
+
+    def set_header_shrink_hold(self, hold: int) -> bool:
+        if ((hold < 0) or (hold >= 2 ** (c.sizeof(self.__header_shrink_hold) * 8))):
+            print("wrong hold param")
+            return False
+        self.__header_shrink_hold.value = hold
+        return True
+
+
+    def set_header_version(self, version: int) -> bool:
+        if ((version < 0) or (version >= 2 ** (c.sizeof(self.__header_version) * 8))):
+            print("wrong version")
+            return False
+        self.__header_version.value = version
+        return True
+
+
+    def set_header_flag(self, bitnum: int, bitvalue: int) -> bool:
+        if ((bitnum < 0) or (bitnum > 2 ** (c.sizeof(self.__header_flag) * 8))):
+            print("wrong bit num")
+            return False
+        if (bitvalue != 0 and bitvalue != 1):
+            print("wrong bit value")
+            return False
+        if (bitvalue):
+            self.__header_flag.value |= 1 << bitnum
+        else:
+            self.__header_flag.value &=~(1 << bitnum)
+        return True
+
+
+    def convert_element_from_yaml(self):
+        if (self.key_scm_ver in self.__header_data.keys()):
+            self.set_header_version(version=self.__header_data[self.key_scm_ver])
+        value = int.from_bytes(bytes(self.__header_key, encoding="utf-8"), byteorder=sys.byteorder)
+        self.set_header_magic_word(word=value)
+        self.set_header_shrink_hold(hold=2048)
 
 
     def format_header(self):
