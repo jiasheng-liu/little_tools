@@ -6,11 +6,11 @@ import os
 import yaml
 import ctypes as c
 
-from scm_common import crc16_ccitt
+from scm_common import crc16_ccitt, now_byteorder, hashcode
 
 
 
-class recordItemProperty:
+class scm_recordItemProperty:
 
     rditppt_flag = c.c_uint16(0)
     rditppt_type = c.c_uint8(0)
@@ -144,29 +144,69 @@ class recordItemProperty:
 
 
 
-class recordItem(recordItemProperty):
+class scm_recordItem(scm_recordItemProperty):
 
 
     rdit_hashcode = c.c_uint32(0)
     rdit_lp = c.c_uint16(0)
     rdit_lv = c.c_uint16(0)
-    rdit_ppt = recordItemProperty()
+    rdit_ppt = scm_recordItemProperty()
     rdit_value = bytearray()
-    key_path = bytearray()
-    value = bytearray()
+    key_path = ""
+    value = {}
+    buffer = []
 
 
-    def __init__(self, keypath, value):
+    def __init__(self, keypath:str, value:dict):
         self.rdit_hashcode = c.c_uint32(0)
         self.rdit_lp = c.c_uint16(0)
         self.rdit_lv = c.c_uint16(0)
-        self.rdit_ppt = recordItemProperty()
+        self.rdit_ppt = scm_recordItemProperty()
         self.rdit_value = bytearray()
+        self.key_path = bytearray(keypath)
+        self.value = value
 
 
-    def set_record_hashcode(self):
-        self.rdit_hashcode = "asdf"
-    
+
+    def calc_record_hashcode(self, key_path):
+        self.rdit_hashcode = hashcode(key_path)
 
 
+    def set_record_lp(self):
+        self.rdit_lp = self.get_property_length()
+
+
+    def set_record_lv(self, length) -> bool:
+        if ((length < 0) or (length >= 2 ** (c.sizeof(self.rdit_lv) * 8))):
+            print("wrong length")
+            return False
+
+        self.rdit_lv = length
+        return True
+
+
+    def set_record_property(self) -> bool:
+        return True
+
+
+    def set_record_value(self, data: bytearray) -> bool:
+        self.rdit_value = data
+        return True
+
+
+    def format_record(self) -> bytearray:
+        self.buffer.clear()
+        self.buffer.extend(list(int(self.rdit_hashcode.value).to_bytes(c.sizeof(self.rdit_hashcode), byteorder=now_byteorder)))
+        self.buffer.extend(list(int(self.rdit_lp.value).to_bytes(c.sizeof(self.rdit_lp), byteorder=now_byteorder)))
+        self.buffer.extend(list(int(self.rdit_lv.value).to_bytes(c.sizeof(self.rdit_lv), byteorder=now_byteorder)))
+        self.buffer.extend(list(self.format_property()))
+        self.buffer.extend(list(int(self.rdit_value.value).to_bytes(c.sizeof(self.rdit_value), byteorder=now_byteorder)))
+        self.buffer.reverse()
+        return bytearray(self.buffer)
+
+
+    def write_record(self, file: str):
+        with open(file, 'wb') as f:
+            f.write(self.buffer)
+        f.close()
 
