@@ -22,7 +22,7 @@ class scm_recordItemProperty:
     rditppt_length = c.c_uint16(0)
     rditppt_data = []
 
-    rd_type_list = ["uint8", "uint16", "uint32", "char *", "BCD", "binary"]
+    rd_type_list = ["uint8", "uint16", "uint32", "string", "BCD", "binary"]
     rditppt_key_list = ["flag", "type", "version"]
 
     def __init__(self):
@@ -36,20 +36,6 @@ class scm_recordItemProperty:
         self.rditppt_length = c.c_uint16(0)
         self.rditppt_data = []
 
-    def __del__(self):
-        pass
-
-
-    def property_clear(self):
-        self.rditppt_flag = c.c_uint16(0)
-        self.rditppt_type = c.c_uint8(0)
-        self.rditppt_version = c.c_uint8(0)
-        self.rditppt_crc = c.c_uint16(0)
-        self.rditppt_ts = c.c_uint32(0)
-        self.rditppt_lk = c.c_uint16(0)
-        self.rditppt_lk_data = bytearray()
-        self.rditppt_length = c.c_uint16(0)
-        self.rditppt_data = []
 
     def get_property_length(self):
         self.rditppt_length.value = 0
@@ -101,7 +87,7 @@ class scm_recordItemProperty:
             if (value == -1):
                 print("wrong value")
                 return False
-            self.rditppt_flag = value
+            self.rditppt_flag.value = value
 
         return True
 
@@ -111,12 +97,12 @@ class scm_recordItemProperty:
             print("verion parameter is wrong")
             return False
 
-        self.rditppt_version = version
+        self.rditppt_version.value = version
         return True
 
 
     def set_property_ts(self):
-        self.rditppt_ts = 0
+        self.rditppt_ts.value = 0
 
 
     def calcu_property_crc(self, andSet=True) -> c.c_uint16:
@@ -148,6 +134,8 @@ class scm_recordItemProperty:
                 print("wrong length")
                 return False
         self.rditppt_lk_data = bytearray()
+        if (isinstance(data, str)):
+            data = bytearray(data, encoding='utf-8')
         self.rditppt_lk_data = bytearray(data)
         return True
 
@@ -173,13 +161,7 @@ class scm_recordItemProperty:
 
 class scm_recordItem(scm_recordItemProperty):
 
-
-    # rdit_hashcode = c.c_uint32(0)
-    # rdit_lp = c.c_uint16(0)
-    # rdit_lv = c.c_uint16(0)
-    # rdit_ppt = scm_recordItemProperty()
-    # rdit_value = bytearray()
-    key_path = ""
+    # key_path = ""
     value = {}
     buffer = []
 
@@ -190,9 +172,8 @@ class scm_recordItem(scm_recordItemProperty):
         self.rdit_lv = c.c_uint16(0)
         self.rdit_ppt = scm_recordItemProperty()
         self.rdit_value = bytearray()
-        self.key_path = bytearray(keypath, encoding='utf-8')
-        self.set_property_lk_data(data=self.key_path, length=len(keypath), withlength=True)
-        self.rdit_ppt.property_clear()
+        key_path = bytearray(keypath, encoding='utf-8')
+        self.set_property_lk_data(data=key_path, length=len(keypath), withlength=True)
 
 
     def calc_record_hashcode(self, key_path):
@@ -235,7 +216,7 @@ class scm_recordItem(scm_recordItemProperty):
         self.rdit_lp.value = self.get_property_length()
         self.set_record_property()
         self.set_record_lp()
-        self.calc_record_hashcode(self.key_path)
+        self.calc_record_hashcode(self.rditppt_lk_data)
         self.buffer.clear()
         self.buffer.extend(list(int(self.rdit_hashcode.value).to_bytes(c.sizeof(self.rdit_hashcode), byteorder=now_byteorder)))
         self.buffer.extend(list(int(self.rdit_lp.value).to_bytes(c.sizeof(self.rdit_lp), byteorder=now_byteorder)))

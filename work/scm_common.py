@@ -1,7 +1,7 @@
 #! /bin/python3
 #-*- utf-8 -*-
 
-now_byteorder = "little"
+now_byteorder = "big"
 
 def crc16_ccitt(data:bytes, poly=0x8408) -> int :
     """
@@ -43,3 +43,10 @@ if __name__ == "__main__":
     hc = hashcode(data=data)
     print(hc)
 
+    data1=bytes("cmee", encoding='utf-8')
+    hc1 = hashcode(data=data1)
+    print(hc1)
+
+    data1=bytes("cscs", encoding='utf-8')
+    hc1 = hashcode(data=data1)
+    print(hc1)

@@ -1,3 +1,6 @@
+
+
+
 scm:
     # firmware version being used. When this value is changed, a parameter upgrade shall be triggered.
     fwver: 1.2.6
@@ -17,6 +20,14 @@ scfg:
         version: 1      # auto type is uint32
         type: "uint16"
         value: 129        # auto type is uint32
+
+
+cmee:
+    type: "uint8"
+    value: 2
+
+cscs: 1
+
 
 # so there are some reserved keyname for this format: property/version/type/value
 

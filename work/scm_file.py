@@ -38,6 +38,17 @@ class scm_file_header:
         self.__out_file = out_file
 
 
+    def get_header_length(self) -> int:
+        length = 0
+        length += c.sizeof(self.__header_magic_word)
+        length += c.sizeof(self.__header_shrink_hold)
+        length += c.sizeof(self.__header_version)
+        length += c.sizeof(self.__header_flag)
+        length += c.sizeof(self.__header_rfu)
+        length += c.sizeof(self.__header_crc)
+        return length
+
+
     def load_yaml(self) -> dict:
         yaml_file = self.__input_yaml
         try:

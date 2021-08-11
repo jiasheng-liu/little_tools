@@ -37,19 +37,32 @@ def scm_generate_new_record(outfile, cmd:str, data:dict):
         exit(-1)
 
     if (not isinstance(data, dict)):
-        exit(-2)
+        record = scm_recordItem(keypath=cmd)
+        record.set_property_type('uint32')
+        record.set_record_lv(type(data))
+        record.set_record_value(data)
+        file_data = record.format_record()
+        record.write_record(outfile, file_data)
+        return
+
     key_list = data.keys()
     key_path = ""
 
     print(key_list)
+    new_record_flag = True
     for key in key_list:
         value_dict = data[key]
-        key_path = ""
-        key_path = '/'.join([cmd, key])
         value_type = ""
+        if (new_record_flag):
+            record = scm_recordItem(keypath=cmd)
+            record.set_property_type('uint32')
 
         if (isinstance(value_dict, dict)):
             value = value_dict['value']
+            key_path = ""
+            key_path = '/'.join([cmd, key])
+            record.set_property_lk(len(key_path))
+            record.set_property_lk_data(key_path, len(key_path), withlength=True)
             for key1 in value_dict.keys():
                 if (key1 in record.rditppt_key_list):
                     if (key1 == "flag"): # flag
@@ -62,15 +75,31 @@ def scm_generate_new_record(outfile, cmd:str, data:dict):
                     elif (key1 == "value"):
                         pass
                     else:
-                        print("key1=" +str(key1))
+                        print("key1=" + str(key1))
+                    continue
         else:
+            key_path = cmd
+            record.set_property_lk_data(key_path, length=len(key_path), withlength=True)
             value = value_dict
+            if (key in record.rditppt_key_list):
+                if (key == "flag"): # flag
+                    record.set_property_flag(value=value)
+                elif (key == "version"):
+                    record.set_property_version(version=value)
+                elif (key == "type"):
+                    record.set_property_type(ptype=value)
+                    value_type = value
+                elif (key == "value"):
+                    pass
+                else:
+                    print("key=" + str(key1))
+                new_record_flag = False
+                continue
+
 
         if (isinstance(value, str) and (value_type != "string")):
             if (value.isdigit()):
                 value = int.from_bytes(bytes(value, encoding="utf-8"), byteorder=sys.byteorder)
-
-        record = scm_recordItem(keypath=key_path)
 
         if (isinstance(value, str) or isinstance(value, bytes) or isinstance(value, bytearray)):
             record.set_record_lv(ptype=type(value), length=len(value))
@@ -83,7 +112,7 @@ def scm_generate_new_record(outfile, cmd:str, data:dict):
         file_data = record.format_record()
         record.write_record(outfile, file_data)
 
-        # record.delet
+        new_record_flag = True
 
     print("done")
 
