@@ -1,4 +1,17 @@
-
+# this is a demo for scm config format
+# 
+# scm means data about scm system
+# 
+# scfg/cmee/xxx are the at command
+# radio/band/2g, aaa/bbb/ccc are the sub command of at
+# the content in each field will put into item record
+#
+#
+# so there are some reserved keyname 
+# version (uint8), 
+# type(uint8), it includes uint8, uint16, uint32, string, BCD, binary
+# flag (uint16, bit oriented)
+# 
 
 
 scm:
@@ -29,5 +42,4 @@ cmee:
 cscs: 1
 
 
-# so there are some reserved keyname for this format: property/version/type/value
 
