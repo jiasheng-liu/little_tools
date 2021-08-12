@@ -18,7 +18,7 @@ class scm_file_header:
     __current_dir = os.path.dirname(__file__)
     __file_data = {}
 
-    __header_key = "scm"
+    __header_key = "SCM"
     __header_data = {}
 
     __header_buffer = []
@@ -61,13 +61,13 @@ class scm_file_header:
                 finally:
                     stream.close()
 
-            if (self.__file_data.get(self.__header_key) is not None):
-                self.__header_data = self.__file_data[self.__header_key]
+            if (self.__file_data.get(self.__header_key.lower()) is not None):
+                self.__header_data = self.__file_data[self.__header_key.lower()]
             else:
                 raise KeyError
         
         except KeyError:
-            print("key error, no %s" % self.__header_key)
+            print("key error, no %s" % self.__header_key.lower())
             exit(-1)
 
         except:
@@ -83,12 +83,12 @@ class scm_file_header:
 
 
     def set_header_key(self, key: str):
-        self.__header_key = key
+        self.__header_key = key.lower()
 
 
     def set_header_magic_word(self, word:int = 0):
         if (word == 0):
-            self.__header_magic_word.value = int.from_bytes(bytes(self.__header_key, encoding="utf-8"), byteorder=sys.byteorder)
+            self.__header_magic_word.value = int.from_bytes(bytes(self.__header_key.upper(), encoding="utf-8"), byteorder=sys.byteorder)
         else:
             self.__header_magic_word.value = word
 
@@ -126,7 +126,7 @@ class scm_file_header:
     def convert_element_from_yaml(self):
         if (self.key_scm_ver in self.__header_data.keys()):
             self.set_header_version(version=self.__header_data[self.key_scm_ver])
-        value = int.from_bytes(bytes(self.__header_key, encoding="utf-8"), byteorder=sys.byteorder)
+        value = int.from_bytes(bytes(self.__header_key.upper(), encoding="utf-8"), byteorder=sys.byteorder)
         self.set_header_magic_word(word=value)
         self.set_header_shrink_hold(hold=2048)
 

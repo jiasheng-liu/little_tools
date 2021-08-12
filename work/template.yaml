@@ -1,0 +1,15 @@
+
+
+header:
+  magicword: uint32
+  shrinkhold: uint32
+  version: uint8
+  flag: uint8
+  rfu: uint32
+  crc: uint16
+
+
+
+record:
+  hashcode: "uint32"
+

@@ -13,7 +13,7 @@ from scm_file import scm_file_header
 
 
 
-magic_word = "scm"
+magic_word = "SCM"
 
 
 def scm_generate_header(infile, outfile):
@@ -138,7 +138,7 @@ def scm_generator():
 
     yaml_key_list = list(yaml_data.keys())
     print(type(yaml_key_list))
-    yaml_key_list.remove(magic_word)
+    yaml_key_list.remove(magic_word.lower())
     for key in yaml_key_list:
         scm_generate_new_record(outfile=output_file, cmd=key, data=yaml_data[key])
 
