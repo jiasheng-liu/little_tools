@@ -24,10 +24,10 @@ class scm_file_header:
     __header_buffer = []
     __header_magic_word = c.c_uint32(0)
     __header_crc = c.c_uint16(0)
-    __header_shrink_hold = c.c_uint32(0)
+    __header_shrink_hold = c.c_uint16(0)
     __header_version = c.c_uint8(0)
     __header_flag = c.c_uint8(0)
-    __header_rfu = c.c_uint32(0)
+    __header_rfu = bytes(6)
     __content=""
 
 
@@ -136,7 +136,7 @@ class scm_file_header:
         self.__header_buffer.extend(list(int(self.__header_shrink_hold.value).to_bytes(c.sizeof(self.__header_shrink_hold), byteorder=now_byteorder)))
         self.__header_buffer.extend(list(int(self.__header_version.value).to_bytes(c.sizeof(self.__header_version), byteorder=now_byteorder)))
         self.__header_buffer.extend(list(int(self.__header_flag.value).to_bytes(c.sizeof(self.__header_flag), byteorder=now_byteorder)))
-        self.__header_buffer.extend(list(int(self.__header_rfu.value).to_bytes(c.sizeof(self.__header_rfu), byteorder=now_byteorder)))
+        self.__header_buffer.extend(list(self.__header_rfu))
 
         self.__header_crc.value = crc16_ccitt(bytearray(self.__header_buffer))
         self.__header_buffer.extend(list(int(self.__header_crc.value).to_bytes(c.sizeof(self.__header_crc), byteorder=now_byteorder)))
