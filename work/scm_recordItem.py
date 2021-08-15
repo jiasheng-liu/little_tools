@@ -40,7 +40,6 @@ class scm_recordItemProperty:
         self.rditppt_length.value += c.sizeof(self.rditppt_flag)
         self.rditppt_length.value += c.sizeof(self.rditppt_type)
         self.rditppt_length.value += c.sizeof(self.rditppt_version)
-        self.rditppt_length.value += c.sizeof(self.rditppt_crc)
         self.rditppt_length.value += c.sizeof(self.rditppt_ts)
         self.rditppt_length.value += c.sizeof(self.rditppt_lk)
         self.rditppt_length.value += self.rditppt_lk.value
@@ -123,6 +122,19 @@ class scm_recordItemProperty:
         if (length < 0 or data is None):
             print("wrong data or length")
             return False
+        if (length != len(data)):       # should same with dat
+            return False
+
+        self.rditppt_lk_data = bytearray()
+        if (isinstance(data, str)):
+            data = bytes(data+"\0", encoding='utf-8')
+        self.rditppt_lk_data = bytes(data)
+
+        if (length != len(data) - 1):   # with an end char
+            return False
+        else:
+            length = len(data)
+
         if (withlength):
             if (not self.set_property_lk(length)):
                 print("failed to set lk")
@@ -131,22 +143,20 @@ class scm_recordItemProperty:
             if (length != self.rditppt_lk.value):
                 print("wrong length")
                 return False
-        self.rditppt_lk_data = bytearray()
-        if (isinstance(data, str)):
-            data = bytearray(data, encoding='utf-8')
-        self.rditppt_lk_data = bytearray(data)
         return True
 
 
     def format_property(self) -> bytearray:
         # rditppt_data
         self.rditppt_data.clear()
+
         self.rditppt_data.extend(list(int(self.rditppt_flag.value).to_bytes(c.sizeof(self.rditppt_flag), byteorder=now_byteorder)))
         self.rditppt_data.extend(list(int(self.rditppt_type.value).to_bytes(c.sizeof(self.rditppt_type), byteorder=now_byteorder)))
         self.rditppt_data.extend(list(int(self.rditppt_version.value).to_bytes(c.sizeof(self.rditppt_version), byteorder=now_byteorder)))
         self.rditppt_data.extend(list(int(self.rditppt_ts.value).to_bytes(c.sizeof(self.rditppt_ts), byteorder=now_byteorder)))
         self.rditppt_data.extend(list(int(self.rditppt_lk.value).to_bytes(c.sizeof(self.rditppt_lk), byteorder=now_byteorder)))
         self.rditppt_data.extend(list(self.rditppt_lk_data))
+
         # if (self.calcu_property_crc() == 0):
         #     print("failed to caculte crc")
         #     return None
@@ -171,11 +181,12 @@ class scm_recordItem(scm_recordItemProperty):
         self.rdit_lv = c.c_uint16(0)
         self.rdit_ppt = scm_recordItemProperty()
         self.rdit_value = bytearray()
-        key_path = bytearray(keypath, encoding='utf-8')
-        self.set_property_lk_data(data=key_path, length=len(keypath), withlength=True)
+        # key_path = bytearray(keypath, encoding='utf-8')
+        self.set_property_lk_data(data=keypath, length=len(keypath), withlength=True)
 
 
     def calc_record_hashcode(self, key_path):
+        print("key_path=%s, len=%d" % (key_path, len(key_path)))
         self.rdit_hashcode.value = hashcode(key_path)
 
 
@@ -224,11 +235,8 @@ class scm_recordItem(scm_recordItemProperty):
         self.set_record_property()
         self.set_record_lp()
         self.calc_record_hashcode(self.rditppt_lk_data)
+        print(self.rdit_hashcode.value)
         self.buffer.clear()
-        self.buffer.extend(list(int(self.rdit_hashcode.value).to_bytes(c.sizeof(self.rdit_hashcode), byteorder=now_byteorder)))
-        self.buffer.extend(list(int(self.rdit_lp.value).to_bytes(c.sizeof(self.rdit_lp), byteorder=now_byteorder)))
-        self.buffer.extend(list(int(self.rdit_lv.value).to_bytes(c.sizeof(self.rdit_lv), byteorder=now_byteorder)))
-        self.buffer.extend(list(self.format_property()))
         if (isinstance(self.rdit_value, str)):
             self.buffer.extend(list(bytearray(self.rdit_value, encoding="utf-8")))
         elif (isinstance(self.rdit_value, int)):
@@ -236,7 +244,11 @@ class scm_recordItem(scm_recordItemProperty):
         else:
             print("ffff")
             exit(-1)
-        self.buffer.reverse()
+        self.buffer.extend(list(self.format_property()))
+        self.buffer.extend(list(int(self.rdit_lv.value).to_bytes(c.sizeof(self.rdit_lv), byteorder=now_byteorder)))
+        self.buffer.extend(list(int(self.rdit_lp.value).to_bytes(c.sizeof(self.rdit_lp), byteorder=now_byteorder)))
+        self.buffer.extend(list(int(self.rdit_hashcode.value).to_bytes(c.sizeof(self.rdit_hashcode), byteorder=now_byteorder)))
+
         self.calcu_record_crc(buffer=self.buffer, andSet=True)
         self.buffer.extend(list(int(self.rdit_crc.value).to_bytes(c.sizeof(self.rdit_crc), byteorder=now_byteorder)))
         return bytearray(self.buffer)

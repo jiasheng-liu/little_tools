@@ -95,7 +95,11 @@ def scm_generate_new_record(outfile, cmd:str, data:dict):
                     print("key=" + str(key1))
                 new_record_flag = False
                 continue
-
+            else:
+                if (new_record_flag):
+                    key_path = ""
+                    key_path = '/'.join([cmd, key])
+                    record.set_property_lk_data(key_path, length=len(key_path), withlength=True)
 
         if (isinstance(value, str) and (value_type != "string")):
             if (value.isdigit()):
