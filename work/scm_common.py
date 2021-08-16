@@ -59,12 +59,12 @@ def hashcode(data: bytes, init_hash=0) -> int:
 
 
 if __name__ == "__main__":
-    data = bytes("helloworld", encoding='utf-8')
+    data = bytes("cmee", encoding='utf-8')
     # data = bytes("123456789", encoding='utf-8')
     crc = crc16_ccitt(data=data)
     print(hex(crc))
     print(crc)
-    hc = hashcode(data=data)
+    hc = hashcode(data=data, endchar=True)
     print(hex(hc))
 
     # data1=bytes("cmee", encoding='utf-8')
